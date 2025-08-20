@@ -1,0 +1,8 @@
+opencv-python
+ultralytics
+insightface
+mtcnn
+face-recognition
+torch
+
+send2trash

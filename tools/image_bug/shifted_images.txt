@@ -1,0 +1,11 @@
+./dataset_pending\123\1_face_detected\123_0_117.png, -434.34, 1.42
+./dataset_pending\212\no_face_detected\212_0_114.png, -453.59, -12.48
+./dataset_pending\410\no_face_detected\410_0_059.png, -448.50, -17.05
+./dataset_pending\473\no_face_detected\473_0_240.png, -448.52, -17.34
+./dataset_pending\491\2_face_detected\491_0_118.png, -448.44, -17.37
+./dataset_pending\508\2_face_detected\508_0_144.png, -448.80, -16.92
+./dataset_pending\735\2_face_detected\735_0_086.png, -454.83, -3.32
+./dataset_pending\748\2_face_detected\748_0_153.png, -454.77, -3.89
+./dataset_pending\766\2_face_detected\766_0_061.png, -454.66, -3.79
+./dataset_pending\776\1_face_detected\776_0_028.png, -454.73, -3.08
+./dataset_pending\879\3_face_detected\879_0_072.png, -454.65, -3.77
