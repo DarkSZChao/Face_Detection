@@ -3,3 +3,9 @@
 
 # ignore .idea folder
 *.idea/
+
+# ignore images and results
+*.jpg
+*.jpeg
+*.png
+*.csv

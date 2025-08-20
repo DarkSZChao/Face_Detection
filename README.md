@@ -1,4 +1,4 @@
-# Face Detection & Blurring for Data Anonymization 
+# Face Detection & Blurring for Data Anonymization
 
 This repository provides a tool to **detect faces in images** and save both the processed images and corresponding bounding box annotations. It supports multiple face detection algorithms and can optionally split results based on the number
 of detected faces.
