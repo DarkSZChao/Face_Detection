@@ -1,36 +1,61 @@
+"""
+This script identifies images listed in a "shifted_images.txt" file and replaces them with their nearest non-shifted neighbors (previous or next image in the same folder).
+If both neighbors are also shifted, it logs a warning.
+"""
+
+import os
 import glob
+import shutil
 
-import cv2
-import numpy as np
+def load_shifted_list(txt_path):
+    shifted = set()
+    with open(txt_path, "r") as f:
+        for line in f:
+            path = line.strip().split(",")[0]
+            shifted.add(os.path.normpath(path))
+    return shifted
 
 
-def find_shift(img1, img2):
-    g1 = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
-    g2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
-    shift = cv2.phaseCorrelate(np.float32(g1), np.float32(g2))
-    return shift
+def replace_from_txt(shifted_txt):
+    shifted_set = load_shifted_list(shifted_txt)
+
+    for img_path in shifted_set:
+        folder = os.path.dirname(img_path)
+
+        if not os.path.exists(img_path):
+            print(f"⚠️ File not found: {img_path}")
+            continue
+
+        # 获取当前文件夹所有图片并排序
+        imgs = sorted(glob.glob(os.path.join(folder, "*.png")))
+
+        try:
+            idx = imgs.index(img_path)
+        except ValueError:
+            print(f"⚠️ Not in list: {img_path}")
+            continue
+
+        replacement = None
+
+        # ✅ 优先前一帧
+        if idx > 0:
+            prev_img = os.path.normpath(imgs[idx - 1])
+            if prev_img not in shifted_set:
+                replacement = imgs[idx - 1]
+
+        # ✅ 否则用后一帧
+        if replacement is None and idx < len(imgs) - 1:
+            next_img = os.path.normpath(imgs[idx + 1])
+            if next_img not in shifted_set:
+                replacement = imgs[idx + 1]
+
+        if replacement:
+            print(f"Replacing:\n  {img_path}\n→ {replacement}")
+            shutil.copy2(replacement, img_path)
+        else:
+            print(f"⚠️ WARNING: Cannot replace {img_path} (neighbors also bad)")
 
 
-sample = 123
-frame = 117
-img_dir = f'./dataset_pending/{sample}/**/'
-img_good_name = f'{sample}_0_{frame - 1}.png'
-img_bad_name = f'{sample}_0_{frame}.png'
-img_good_path = glob.glob(img_dir + img_good_name)[0]
-img_bad_path = glob.glob(img_dir + img_bad_name)[0]
-
-img_good = cv2.imread(img_good_path)
-img_bad = cv2.imread(img_bad_path)
-
-(dx, dy), _ = find_shift(img_good, img_bad)
-print(f"dx={dx}, dy={dy}")
-
-fixed_img = np.roll(img_bad, int(-dx), axis=1)
-cv2.imshow('Image', img_good)
-cv2.waitKey(1000)
-cv2.imshow('Image', img_bad)
-cv2.waitKey(1000)
-cv2.imshow('Image', fixed_img)
-cv2.waitKey(100000)
-
-cv2.destroyAllWindows()
+if __name__ == "__main__":
+    shifted_txt = "shifted_images.txt"
+    replace_from_txt(shifted_txt)

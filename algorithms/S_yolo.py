@@ -6,18 +6,24 @@ from ultralytics import YOLO
 
 
 class S_yolo:
-    def __init__(self):
-        self.model = YOLO(glob.glob("**/runs_best/detect/yolov8s_face_finetuned/weights/best.pt", recursive=True)[0])  # load yolo
+    def __init__(self, model=None):
+        if model is None:
+            self.model = YOLO(glob.glob("**/runs_best/detect/2026-05-05_18-08_yolov8s_face_finetuned/weights/best.pt", recursive=True)[0])  # load yolo
+            # self.model = YOLO(glob.glob("**/yolov8s.pt", recursive=True)[0])  # load yolo
 
     def process(self, input_path):
         img = cv2.imread(input_path)
 
         # apply detection method
-        boxes = self.model.predict(img, conf=0.01, iou=0.1, verbose=False)[0].boxes.xyxy  # low threshold
+        result = self.model.predict(img, conf=0.01, iou=0.1, verbose=False)[0]  # low threshold
+        boxes = result.boxes.xyxy
+        confs = result.boxes.conf
 
         boxes_list = []
-        for box in boxes:
+        conf_list = []
+        for box, conf in zip(boxes, confs):
             x1, y1, x2, y2 = map(int, box)
+
             # make sure no exceed the image boundary
             x1 = max(0, x1)
             y1 = max(0, y1)
@@ -29,9 +35,13 @@ class S_yolo:
             center_y = format(float((y2 + y1) / (2 * img.shape[0])), ".6f")
             width = format(float((x2 - x1) / img.shape[1]), ".6f")
             height = format(float((y2 - y1) / img.shape[0]), ".6f")
-            box_normalised = (center_x, center_y, width, height)
-            boxes_list.append(box_normalised)
-        return img, boxes_list
+
+            conf = format(float(conf), ".6f")
+
+            boxes_list.append((center_x, center_y, width, height))
+            conf_list.append(conf)
+
+        return img, boxes_list, conf_list
 
 
 def multiple_img_predict(input_dir, output_dir, save_img=False):
@@ -39,7 +49,7 @@ def multiple_img_predict(input_dir, output_dir, save_img=False):
 
     input_path_list = glob.glob(input_dir + f'/*.png')
     for input_path in input_path_list:
-        img, box_list = S_yolo().process(input_path)
+        img, box_list, _ = S_yolo().process(input_path)
 
         # save results
         if save_img:
@@ -54,7 +64,6 @@ def multiple_img_predict(input_dir, output_dir, save_img=False):
 
 
 if __name__ == "__main__":
-    # img_dir_list = get_trial_dir_list('./dataset_pending', (0, 900))
     img_dir_list = glob.glob('../test/*')
 
     # for each folder

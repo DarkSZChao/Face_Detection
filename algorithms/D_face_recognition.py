@@ -13,8 +13,10 @@ class D_face_recognition:
         boxes = self.model.face_locations(img)
 
         boxes_list = []
+        conf_list = []
         for box in boxes:
             y1, x2, y2, x1 = box
+
             # make sure no exceed the image boundary
             x1 = max(0, x1)
             y1 = max(0, y1)
@@ -26,14 +28,18 @@ class D_face_recognition:
             center_y = format(float((y2 + y1) / (2 * img.shape[0])), ".6f")
             width = format(float((x2 - x1) / img.shape[1]), ".6f")
             height = format(float((y2 - y1) / img.shape[0]), ".6f")
-            box_normalised = (center_x, center_y, width, height)
-            boxes_list.append(box_normalised)
-        return cv2.cvtColor(img, cv2.COLOR_BGR2RGB), boxes_list
+
+            conf = format(1.0, ".6f")  # face_recognition does not provide confidence score, set it to 1.0
+
+            boxes_list.append((center_x, center_y, width, height))
+            conf_list.append(conf)
+
+        return cv2.cvtColor(img, cv2.COLOR_BGR2RGB), boxes_list, conf_list
 
 
 if __name__ == "__main__":
     input_path = "../1/1_0_233.png"
 
     handler = D_face_recognition()
-    img, boxes_list = handler.process(input_path)
+    img, boxes_list, _ = handler.process(input_path)
     pass

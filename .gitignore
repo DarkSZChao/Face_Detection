@@ -9,3 +9,7 @@
 *.jpeg
 *.png
 *.csv
+
+# ignore the dataset
+algorithms/yolo/dataset/train
+algorithms/yolo/dataset/val

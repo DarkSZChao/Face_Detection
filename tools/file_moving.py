@@ -1,25 +1,36 @@
 import glob
 import os.path
 import shutil
+from multiprocessing import Pool
 
-from send2trash import send2trash
 
-from tools.dataset_reader import get_trial_dir_list
+def process_subfolder(idx, total, input_sub_dir, output_dir):
+    print(f"[{idx + 1}/{total}] Working on: [{input_sub_dir}] to [{output_dir}]")
+
+    for item in glob.glob(f'{input_sub_dir}/**/*.*', recursive=True):
+        dst = os.path.join(input_sub_dir, os.path.basename(item))
+        if os.path.abspath(item) == os.path.abspath(dst):
+            continue
+
+        shutil.move(item, input_sub_dir)
+
+    # delete empty folders
+    empty_dir = [d for d in glob.glob(f'{input_sub_dir}/*') if os.path.isdir(d)]
+    for folder in empty_dir:
+        if not os.listdir(folder):
+            os.rmdir(folder)
+
 
 if __name__ == "__main__":
-    img_dir_list = get_trial_dir_list('./dataset_pending', (0, 840))
+    input_dir = r'.\marked_results'
+    output_dir = r'.\marked_results'
 
-    for f in img_dir_list:
-        print(f'Working: [{f}]')
+    input_sub_dir_list = [d for d in glob.glob(f'{input_dir}/*') if os.path.isdir(d)]
 
-        everything_path_list = glob.glob(f'{f}/*_face_detected/*')
-        for item in everything_path_list:
-            shutil.copy2(item, f)
+    args_list = [
+        (i, len(input_sub_dir_list), input_sub_dir, output_dir)
+        for i, input_sub_dir in enumerate(input_sub_dir_list)
+    ]
 
-        # everything_path_list = glob.glob(f'{f}/[!0!3]_face_detected/*')
-        # os.makedirs(f + '/0_face_detected', exist_ok=True)
-        # for item in everything_path_list:
-        #     shutil.move(item, f + '/0_face_detected')
-        #
-        # send2trash(f + '/1_face_detected')
-        # send2trash(f + '/2_face_detected')
+    with Pool(processes=1) as pool:
+        pool.starmap(process_subfolder, args_list, chunksize=1)

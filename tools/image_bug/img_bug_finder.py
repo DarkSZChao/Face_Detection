@@ -1,19 +1,25 @@
+"""
+This script detects shifted images by comparing them to a reference image using phase correlation.
+It processes multiple image folders in parallel and saves the results to a text file.
+"""
+
 import glob
 import itertools
+import os
 from multiprocessing import Pool
 
 import cv2
 import numpy as np
 
 
-def detect_shift(img_dir, ref_img_path, threshold=100):
-    print(f'Working on: {img_dir}')
+def detect_shift(idx, total, img_dir, ref_img_path, threshold=100):
+    print(f'[{idx + 1}/{total}] Working on: {img_dir}')
     # get ref image
     ref_img = cv2.imread(ref_img_path)
     ref_gray = cv2.cvtColor(ref_img, cv2.COLOR_BGR2GRAY)
 
     shifted_img_list = []
-    img_path_list = glob.glob(f'{img_dir}/**/*.png')
+    img_path_list = glob.glob(f'{img_dir}/**/*.png', recursive=True)
     for img_path in img_path_list:
         img = cv2.imread(img_path)
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -26,21 +32,20 @@ def detect_shift(img_dir, ref_img_path, threshold=100):
 
 
 if __name__ == "__main__":
-    img_folders = glob.glob('./dataset_pending')
-    img_folders = [
-        folder for folder in img_folders
-        if 0 <= int(folder.split('\\')[-1]) <= 900
-    ]
-    img_folders = sorted(img_folders, key=lambda x: int(x.split('\\')[-1]))  # sort the folder
+    target_dir = r'.\extracted_images'
+    img_folders = [d for d in glob.glob(f'{target_dir}/*') if os.path.isdir(d)]
 
     # get ref img
-    ref_img_path = glob.glob(f'./dataset_pending/123/**/123_0_116.png')[0]
+    ref_img_path = glob.glob(f'{img_folders[0]}/*.png')[0]
 
     # apply multiprocessing
-    args_list = [(img_folder, ref_img_path) for img_folder in img_folders]
+    args_list = [
+        (i, len(img_folders), img_folder, ref_img_path)
+        for i, img_folder in enumerate(img_folders)
+    ]
 
-    with Pool(processes=16) as pool:
-        results = pool.starmap(detect_shift, args_list)
+    with Pool(processes=20) as pool:
+        results = pool.starmap(detect_shift, args_list, chunksize=1)
 
     # save result
     results = list(itertools.chain(*results))

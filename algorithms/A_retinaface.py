@@ -11,11 +11,13 @@ class A_retinaface:
         img = cv2.imread(input_path)
 
         # apply detection method
-        boxes = self.app.get(img)
+        faces = self.app.get(img)
 
         boxes_list = []
-        for box in boxes:
-            box = box.bbox.astype(int)
+        conf_list = []
+        for face in faces:
+            box = face.bbox.astype(int)
+
             # make sure no exceed the image boundary
             x1 = max(0, box[0])
             y1 = max(0, box[1])
@@ -27,14 +29,18 @@ class A_retinaface:
             center_y = format(float((y2 + y1) / (2 * img.shape[0])), ".6f")
             width = format(float((x2 - x1) / img.shape[1]), ".6f")
             height = format(float((y2 - y1) / img.shape[0]), ".6f")
-            box_normalised = (center_x, center_y, width, height)
-            boxes_list.append(box_normalised)
-        return img, boxes_list
+
+            conf = format(float(face.det_score), ".6f")
+
+            boxes_list.append((center_x, center_y, width, height))
+            conf_list.append(conf)
+
+        return img, boxes_list, conf_list
 
 
 if __name__ == "__main__":
     input_path = "../1/1_0_233.png"
 
     handler = A_retinaface()
-    img, boxes_list = handler.process(input_path)
+    img, boxes_list, _ = handler.process(input_path)
     pass

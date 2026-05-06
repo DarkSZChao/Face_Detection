@@ -18,9 +18,10 @@ class D_opencv_caffe:
         detections = self.model.forward()
 
         boxes_list = []
+        conf_list = []
         for i in range(detections.shape[2]):
-            confidence = detections[0, 0, i, 2]
-            if confidence > 0.3:
+            conf = detections[0, 0, i, 2]
+            if conf > 0.3:
                 box = detections[0, 0, i, 3:7] * np.array([img.shape[1], img.shape[0], img.shape[1], img.shape[0]])
                 x1, y1, x2, y2 = box.astype(int)
                 # make sure no exceed the image boundary
@@ -34,14 +35,18 @@ class D_opencv_caffe:
                 center_y = format(float((y2 + y1) / (2 * img.shape[0])), ".6f")
                 width = format(float((x2 - x1) / img.shape[1]), ".6f")
                 height = format(float((y2 - y1) / img.shape[0]), ".6f")
-                box_normalised = (center_x, center_y, width, height)
-                boxes_list.append(box_normalised)
-        return img, boxes_list
+
+                conf = format(float(conf), ".6f")
+
+                boxes_list.append((center_x, center_y, width, height))
+                conf_list.append(conf)
+
+        return img, boxes_list, conf_list
 
 
 if __name__ == "__main__":
     input_path = "../test/1/1_0_233.png"
 
     handler = D_opencv_caffe()
-    img, boxes_list = handler.process(input_path)
+    img, boxes_list, _ = handler.process(input_path)
     pass
